@@ -1,0 +1,25 @@
+{
+  "name": "employee-management-system",
+  "version": "1.0.0",
+  "description": "A CLI app that uses the node packages inquirer, mysql2, and console.table to allow a user to access, create, and update employee information.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abrock3/Employee-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Abrock3/Employee-Management-System/issues"
+  },
+  "homepage": "https://github.com/Abrock3/Employee-Management-System#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^8.2.4",
+    "mysql2": "^2.3.3"
+  }
+}
