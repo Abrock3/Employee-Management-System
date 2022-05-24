@@ -2,9 +2,10 @@
   "name": "employee-management-system",
   "version": "1.0.0",
   "description": "A CLI app that uses the node packages inquirer, mysql2, and console.table to allow a user to access, create, and update employee information.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
