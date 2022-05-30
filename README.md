@@ -17,7 +17,7 @@ This is a command line interface CMS that allows an unskilled user to create and
     
 ## Installation:
 
-Before use, from the command line the user must run "npm i" to install the packages necessary for function, then they must log into their mySQL terminal to source db/schema.sql(Note that if you have a local database named "employee_info", its contents will be deleted upon running schema.sql). If the user wishes to fill the database with data to test its functions, they should source db/seeds.sql. The user will then be ready to start the program by running "node app" from the command line.
+Before use, the user needs to be using the node CLI. The user must run "npm i" from the command line to install dependencies, then they must log into their mySQL terminal to source db/schema.sql(Note that if you have a local database named "employee_info", its contents will be deleted upon running schema.sql). If the user wishes to fill the database with data to test its functions, they should source db/seeds.sql. The user will then be ready to start the program by running "node app" from the command line.
 
 ## Usage
 
