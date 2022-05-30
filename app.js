@@ -1,7 +1,16 @@
 const mysql = require("mysql2");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
-const fs = require("fs");
+const conn = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "tarnishedParrot1@3",
+  database: "employee_info",
+});
+function init() {
+  welcomeScreen();
+  centralPrompt();
+}
 
 function welcomeScreen() {
   console.log(`
@@ -14,10 +23,6 @@ function welcomeScreen() {
                   | |             __/ |                                                                              
                   |_|            |___/                                                                               
     `);
-}
-function init() {
-  welcomeScreen();
-  centralPrompt();
 }
 
 function centralPrompt() {
@@ -71,38 +76,35 @@ function centralPrompt() {
           changeEmployeeName();
           break;
         default:
-          process.exit;
+          process.exit(0);
       }
     });
 }
 
-function dbQuery(queryString, tableHeaderString) {
-  const conn = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "tarnishedParrot1@3",
-    database: "employee_info",
-  });
-  conn.query(queryString, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
+async function dbSelectQuery(queryString, tableHeaderString) {
+  conn
+    .promise()
+    .query(queryString)
+    .then(([rows]) => {
       console.log(`\n\n ${tableHeaderString} \n`);
-      console.table(result);
-    }
-    conn.end();
-    centralPrompt();
-  });
+      console.table(rows);
+    })
+    .catch(console.log)
+    .then(() => {
+      centralPrompt();
+    });
 }
 
-function dbAction(queryString, actionDescription, insertedType) {
-  const conn = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "tarnishedParrot1@3",
-    database: "employee_info",
-  });
-  conn.query(queryString, (err, result) => {
+function dbAction(
+  queryString,
+  actionDescription,
+  insertedType,
+  firstPlaceholder,
+  p2,
+  p3,
+  p4
+) {
+  conn.query(queryString, [firstPlaceholder, p2, p3, p4], (err, result) => {
     if (err) {
       console.log(err);
     } else {
@@ -110,21 +112,14 @@ function dbAction(queryString, actionDescription, insertedType) {
         `\n\n You successfully ${actionDescription} a${insertedType}! \n`
       );
     }
-    conn.end();
+
     centralPrompt();
   });
 }
 
-async function dbQueryReturnBoolean(queryString, whereClauseParam) {
-  let query = new Promise((resolve, reject) => {
-    const conn = mysql.createConnection({
-      host: "localhost",
-      user: "root",
-      password: "tarnishedParrot1@3",
-      database: "employee_info",
-    });
-    conn.query(queryString, whereClauseParam, (err, result) => {
-      conn.end();
+async function dbSelectQueryReturnBoolean(queryString, firstPlaceholder) {
+  let promise = new Promise((resolve, reject) => {
+    conn.query(queryString, firstPlaceholder, (err, result) => {
       if (err) {
         console.log(err);
       } else if (result.length) {
@@ -134,147 +129,103 @@ async function dbQueryReturnBoolean(queryString, whereClauseParam) {
       }
     });
   });
-  const value = await query;
-  return value;
+  return await promise;
 }
 
 async function createRoleList() {
-  const conn = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "tarnishedParrot1@3",
-    database: "employee_info",
-  });
-  let parsedResult = [];
-  conn.query(
-    `SELECT role.title AS "name", role.id AS "value" FROM employee_info.role;`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        result.forEach((element) => {
-          {
-            parsedResult.push({ name: element.name, value: element.value });
-          }
-        });
-      }
-    }
-  );
-  conn.end();
-  return parsedResult;
-}
-
-async function createManagerList() {
-  const conn = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "tarnishedParrot1@3",
-    database: "employee_info",
-  });
-  let parsedResult = [];
-  conn.query(
-    `SELECT concat(first_name, " ", last_name) AS "name", id AS "value" FROM employee_info.employee;`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        result.forEach((element) => {
-          {
-            parsedResult.push({ name: element.name, value: element.value });
-          }
-        });
-      }
-    }
-  );
-  conn.end();
-  parsedResult.unshift({ name: "None", value: "null" });
-  return parsedResult;
-}
-
-async function createDepartmentList() {
-  const conn = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "tarnishedParrot1@3",
-    database: "employee_info",
-  });
-  let parsedResult = [];
-  conn.query(
-    `SELECT name AS "name", id AS "value" FROM department;`,
-    (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        result.forEach((element) => {
-          {
-            parsedResult.push({ name: element.name, value: element.value });
-          }
-        });
-      }
-    }
-  );
-  conn.end();
-  return parsedResult;
-}
-
-async function createEmployeeList() {
   const promise = new Promise((resolve, reject) => {
-    const conn = mysql.createConnection({
-      host: "localhost",
-      user: "root",
-      password: "tarnishedParrot1@3",
-      database: "employee_info",
-    });
-    let parsedResult = [];
     conn.query(
-      `SELECT CONCAT(last_name,", ", first_name) AS "name", id AS "value" FROM employee;`,
+      `SELECT role.title AS "name", role.id AS "value" FROM employee_info.role ORDER BY role.id;`,
       (err, result) => {
-        conn.end();
         if (err) {
           console.log(err);
-          reject(err);
         } else {
-          result.forEach((element) => {
-            {
-              parsedResult.push({ name: element.name, value: element.value });
-            }
-          });
-          resolve(parsedResult);
+          resolve(result);
         }
       }
     );
   });
-  const finalResult = await promise;
-  return finalResult;
+  return await promise;
 }
 
-function viewAllEmployees() {
-  dbQuery(
+async function createManagerList() {
+  const promise = new Promise((resolve, reject) => {
+    conn.query(
+      `SELECT concat(first_name, " ", last_name) AS "name", id AS "value" FROM employee_info.employee;`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+  const result = await promise;
+  result.unshift({ name: "None", value: null });
+  return result;
+}
+
+async function createDepartmentList() {
+  const promise = new Promise((resolve, reject) => {
+    conn.query(
+      `SELECT name AS "name", id AS "value" FROM department;`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+  return await promise;
+}
+
+async function createEmployeeList() {
+  const promise = new Promise((resolve, reject) => {
+    conn.query(
+      `SELECT CONCAT(last_name,", ", first_name) AS "name", id AS "value" FROM employee;`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+  return await promise;
+}
+
+async function viewAllEmployees() {
+  await dbSelectQuery(
     `SELECT em.id AS "ID", concat(em.last_name,", ", em.first_name) AS "Name", department.name AS "Department", role.title AS "Position Title", concat("$",role.salary) AS "Salary", concat(ma.last_name,", ", ma.first_name) AS "Direct Manager"
 FROM employee em
 LEFT JOIN role ON em.role_id = role.id
 LEFT JOIN department ON role.department_id = department.id
 LEFT JOIN employee ma ON ma.id = em.manager_id
-ORDER BY department.id ASC,role.id ASC, em.manager_id ASC;`,
+ORDER BY department.id ASC, role.id ASC, em.manager_id ASC;`,
     "Table of All Employees"
   );
 }
 
-function viewAllDepartments() {
-  dbQuery(
+async function viewAllDepartments() {
+  await dbSelectQuery(
     `SELECT department.id AS "ID", department.name AS "Department",count(deptIDSalaryTotals.deptID) AS "Number of Roles in Department", sum(deptIDSalaryTotals.total_employees) AS "Number of Employees in Department", CONCAT("$",SUM(deptIDSalaryTotals.role_total)) AS "Total Salary Committed to Department"
 FROM (SELECT role.department_id AS deptID, (count(employee.id)*role.salary) AS role_total, count(employee.id) AS total_employees
 from employee
-INNER JOIN role on employee.role_id = role.id
+CROSS JOIN role on employee.role_id = role.id
 group by role.title) AS deptIDSalaryTotals
-LEFT JOIN department ON deptIDSalaryTotals.deptID = department.id
+CROSS JOIN department ON deptIDSalaryTotals.deptID = department.id
 GROUP BY deptIDSalaryTotals.deptID;`,
     "Table of All Departments"
   );
 }
 
-function viewAllRoles() {
-  dbQuery(
+async function viewAllRoles() {
+  await dbSelectQuery(
     `SELECT 
     role.id AS 'ID',
     role.title AS 'Title',
@@ -296,7 +247,7 @@ async function addEmployee() {
         type: "input",
         name: "first_name",
         message: "What's the employee's first name?",
-        validate(answer) {
+        validate: (answer) => {
           if (!answer) {
             return "You must enter a first name here.";
           }
@@ -307,7 +258,7 @@ async function addEmployee() {
         type: "input",
         name: "last_name",
         message: "What's the employee's last name?",
-        validate(answer) {
+        validate: (answer) => {
           if (!answer) {
             return "You must enter a last name here.";
           }
@@ -330,9 +281,13 @@ async function addEmployee() {
     .then((answers) => {
       dbAction(
         `INSERT INTO employee (first_name, last_name, role_id, manager_id) 
-VALUES ("${answers.first_name}", "${answers.last_name}", ${answers.role_id} , ${answers.manager_ID});`,
+VALUES (?,?,?,?);`,
         "added",
-        "n employee"
+        "n employee",
+        answers.first_name,
+        answers.last_name,
+        answers.role_id,
+        answers.manager_ID
       );
     });
 }
@@ -344,24 +299,22 @@ async function addDepartment() {
         type: "input",
         name: "name",
         message: "What department would you like to add?",
-        validate: async function (answer) {
-          const result = await dbQueryReturnBoolean(
-            `SELECT name FROM department WHERE name = ?;`,
-            answer
-          );
-          if (result) {
-            return "This department name has already been created!";
+        validate: (answer) => {
+          if (!answer) {
+            return "You must input a Department name.";
+          } else {
+            return true;
           }
-          return true;
         },
       },
     ])
     .then((answers) => {
       dbAction(
         `INSERT INTO department (name) 
-VALUES ("${answers.name}");`,
+VALUES (?);`,
         "added",
-        " department"
+        " department",
+        answers.name
       );
     });
 }
@@ -373,24 +326,21 @@ async function addRole() {
         type: "input",
         name: "title",
         message: "What role would you like to add?",
-        validate: async function (answer) {
-          const result = await dbQueryReturnBoolean(
-            `SELECT title FROM role WHERE title = ?;`,
-            answer
-          );
-          if (result) {
-            return "This role has already been created!";
+        validate: (answer) => {
+          if (!answer) {
+            return "You must input a Department name.";
+          } else {
+            return true;
           }
-          return true;
         },
       },
       {
         type: "input",
         name: "salary",
         message: "What salary should this new role have?",
-        validate: function (answer) {
+        validate: (answer) => {
           if (isNaN(parseInt(answer)) || answer < 50000) {
-            return "You must input an integer above 50000";
+            return "You must input an integer above 50000, with no commas or other symbols.";
           }
           return true;
         },
@@ -404,11 +354,12 @@ async function addRole() {
     ])
     .then((answers) => {
       dbAction(
-        `INSERT INTO role (title,salary,department_id) VALUES ("${
-          answers.title
-        }", "${parseInt(answers.salary)}", ${answers.department_id});`,
+        `INSERT INTO role (title,salary,department_id) VALUES (?, ?, ?);`,
         "added",
-        " role"
+        " role",
+        answers.title,
+        parseInt(answers.salary),
+        answers.department_id
       );
     });
 }
@@ -431,9 +382,11 @@ async function changeEmployeeRole() {
     ])
     .then((answers) => {
       dbAction(
-        `UPDATE employee SET role_id = ${answers.role_id} WHERE id = ${answers.employee_id};`,
+        `UPDATE employee SET role_id = ? WHERE id = ?;`,
         "updated",
-        " role"
+        " role",
+        answers.role_id,
+        answers.employee_id
       );
     });
 }
@@ -456,9 +409,11 @@ async function changeEmployeeDirectManager() {
     ])
     .then((answers) => {
       dbAction(
-        `UPDATE employee SET manager_id = ${answers.employee_id} WHERE id = ${answers.employee_id};`,
+        `UPDATE employee SET manager_id = ? WHERE id = ?;`,
         "updated",
-        " manager"
+        " manager",
+        answers.employee_id,
+        answers.employee_id
       );
     });
 }
@@ -476,7 +431,7 @@ async function changeEmployeeName() {
         type: "input",
         name: "first_name",
         message: "What's the employee's new first name?",
-        validate(answer) {
+        validate: (answer) => {
           if (!answer) {
             return "You must enter a first name here.";
           }
@@ -487,7 +442,7 @@ async function changeEmployeeName() {
         type: "input",
         name: "last_name",
         message: "What's the employee's new last name?",
-        validate(answer) {
+        validate: (answer) => {
           if (!answer) {
             return "You must enter a last name here.";
           }
@@ -497,12 +452,14 @@ async function changeEmployeeName() {
     ])
     .then((answers) => {
       dbAction(
-        `UPDATE employee SET first_name = "${answers.first_name}", last_name = "${answers.last_name}" WHERE id = ${answers.employee_id};`,
+        `UPDATE employee SET first_name = ?, last_name = ? WHERE id = ?;`,
         "updated",
-        "n employee's name"
+        "n employee's name",
+        answers.first_name,
+        answers.last_name,
+        answers.employee_id
       );
     });
 }
 
-// need to add placeholders (?) to all queries
 init();
