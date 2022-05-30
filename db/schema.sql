@@ -1,5 +1,6 @@
-DROP DATABASE IF EXISTS employee_info;
+/* This MySQL code will delete and create the employee_info databse and create a set of related tables */
 
+DROP DATABASE IF EXISTS employee_info;
 CREATE DATABASE employee_info;
 
 USE employee_info;

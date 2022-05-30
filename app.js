@@ -7,6 +7,8 @@ const conn = mysql.createConnection({
   password: "tarnishedParrot1@3",
   database: "employee_info",
 });
+// this gets called at the bottom of the page and will kick off the program, displaying a title and bringing the user
+// to the central prompt
 function init() {
   welcomeScreen();
   centralPrompt();
@@ -25,6 +27,8 @@ function welcomeScreen() {
     `);
 }
 
+// All other functions lead back to this one
+// this function uses inquirer to give the user options to view and manipulate the database
 function centralPrompt() {
   inquirer
     .prompt([
@@ -81,6 +85,7 @@ function centralPrompt() {
     });
 }
 
+// this was used in all functions that are simply calling for and displaying a table of data
 async function dbSelectQuery(queryString, tableHeaderString) {
   conn
     .promise()
@@ -95,6 +100,7 @@ async function dbSelectQuery(queryString, tableHeaderString) {
     });
 }
 
+// This is called whenever the user wants to update or insert data into a table.
 function dbAction(
   queryString,
   actionDescription,
@@ -104,6 +110,7 @@ function dbAction(
   p3,
   p4
 ) {
+  // We use placeholders to heighten database security; this can prevent SQL injections
   conn.query(queryString, [firstPlaceholder, p2, p3, p4], (err, result) => {
     if (err) {
       console.log(err);
@@ -112,27 +119,14 @@ function dbAction(
         `\n\n You successfully ${actionDescription} a${insertedType}! \n`
       );
     }
-
     centralPrompt();
   });
 }
 
-async function dbSelectQueryReturnBoolean(queryString, firstPlaceholder) {
-  let promise = new Promise((resolve, reject) => {
-    conn.query(queryString, firstPlaceholder, (err, result) => {
-      if (err) {
-        console.log(err);
-      } else if (result.length) {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
-  });
-  return await promise;
-}
-
+// this was used to create a list of roles in the choice list for two inquirer prompts
 async function createRoleList() {
+  // I needed to use promises in all of the "Create" functions to ensure that the db query was given time to resolve
+  // There are other ways to create a promise-wrapped db query (see dbSelectQuery), but this works similarly
   const promise = new Promise((resolve, reject) => {
     conn.query(
       `SELECT role.title AS "name", role.id AS "value" FROM employee_info.role ORDER BY role.id;`,
@@ -148,6 +142,7 @@ async function createRoleList() {
   return await promise;
 }
 
+// this was used to create a list of possible managers in the choice list for two inquirer prompts
 async function createManagerList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
@@ -166,6 +161,7 @@ async function createManagerList() {
   return result;
 }
 
+// this was used to create a list of possible departments in the choice list for an inquirer prompt
 async function createDepartmentList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
@@ -182,6 +178,7 @@ async function createDepartmentList() {
   return await promise;
 }
 
+// this was used to create a list of possible employees in the choice list for three inquirer prompts
 async function createEmployeeList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
@@ -199,6 +196,7 @@ async function createEmployeeList() {
   return await promise;
 }
 
+// uses dbSelectQuery to print all employees and their relevant info
 async function viewAllEmployees() {
   await dbSelectQuery(
     `SELECT em.id AS "ID", concat(em.last_name,", ", em.first_name) AS "Name", department.name AS "Department", role.title AS "Position Title", concat("$",role.salary) AS "Salary", concat(ma.last_name,", ", ma.first_name) AS "Direct Manager"
@@ -211,6 +209,7 @@ ORDER BY department.id ASC, role.id ASC, em.manager_id ASC;`,
   );
 }
 
+// uses dbSelectQuery to print all departments and their relevant info
 async function viewAllDepartments() {
   await dbSelectQuery(
     `SELECT department.id AS "ID", department.name AS "Department",count(deptIDSalaryTotals.deptID) AS "Number of Roles in Department", sum(deptIDSalaryTotals.total_employees) AS "Number of Employees in Department", CONCAT("$",SUM(deptIDSalaryTotals.role_total)) AS "Total Salary Committed to Department"
@@ -224,6 +223,7 @@ GROUP BY deptIDSalaryTotals.deptID;`,
   );
 }
 
+// uses dbSelectQuery to print all roles and their relevant info
 async function viewAllRoles() {
   await dbSelectQuery(
     `SELECT 
@@ -240,6 +240,7 @@ async function viewAllRoles() {
   );
 }
 
+// uses inquirer to gather information about a new employee, validate it, then insert it into the employee table
 async function addEmployee() {
   inquirer
     .prompt([
@@ -269,6 +270,7 @@ async function addEmployee() {
         type: "list",
         name: "role_id",
         message: "What is the employee's role?",
+        // these choices require a db query to generate them, so I called them with await; otherwise no choices would be displayed, as the query wasn't complete yet
         choices: await createRoleList(),
       },
       {
@@ -279,6 +281,7 @@ async function addEmployee() {
       },
     ])
     .then((answers) => {
+      // dbAction is called to accomplish the insertion
       dbAction(
         `INSERT INTO employee (first_name, last_name, role_id, manager_id) 
 VALUES (?,?,?,?);`,
@@ -292,6 +295,7 @@ VALUES (?,?,?,?);`,
     });
 }
 
+// this function uses inquirer to get a new department name from the user, validates it, and inserts it into the department table
 async function addDepartment() {
   inquirer
     .prompt([
@@ -309,6 +313,7 @@ async function addDepartment() {
       },
     ])
     .then((answers) => {
+      // dbAction will handle the insertion and succes message (if applicable) for us
       dbAction(
         `INSERT INTO department (name) 
 VALUES (?);`,
@@ -319,6 +324,8 @@ VALUES (?);`,
     });
 }
 
+// this function uses inquirer to get a new role name from the user, validates it, gets the department
+// and inserts it into the department table
 async function addRole() {
   inquirer
     .prompt([
@@ -327,6 +334,7 @@ async function addRole() {
         name: "title",
         message: "What role would you like to add?",
         validate: (answer) => {
+          // this ensures that the user cannot enter a falsy value (such as a blank string)
           if (!answer) {
             return "You must input a Department name.";
           } else {
@@ -339,7 +347,8 @@ async function addRole() {
         name: "salary",
         message: "What salary should this new role have?",
         validate: (answer) => {
-          if (isNaN(parseInt(answer)) || answer < 50000) {
+          // this ensures that the user cannot enter a falsy value, and that they can't enter a value under 50,000
+          if (isNaN(parseInt(answer)) || parseInt(answer) < 50000) {
             return "You must input an integer above 50000, with no commas or other symbols.";
           }
           return true;
@@ -353,6 +362,7 @@ async function addRole() {
       },
     ])
     .then((answers) => {
+      // dbAction will handle the insertion and succes message (if applicable) for us
       dbAction(
         `INSERT INTO role (title,salary,department_id) VALUES (?, ?, ?);`,
         "added",
@@ -364,6 +374,7 @@ async function addRole() {
     });
 }
 
+// this function will use inquirer to prompt the user to select an employee and a role, then updates their role using that info
 async function changeEmployeeRole() {
   inquirer
     .prompt([
@@ -391,6 +402,7 @@ async function changeEmployeeRole() {
     });
 }
 
+// this function will use inquirer to prompt the user to select an employee, select another employee to be their manager then updates their row using that info
 async function changeEmployeeDirectManager() {
   inquirer
     .prompt([
@@ -404,7 +416,7 @@ async function changeEmployeeDirectManager() {
         type: "list",
         name: "manager_id",
         message: "Who do you want the employee's new manager to be?",
-        choices: await createEmployeeList(),
+        choices: await createManagerList(),
       },
     ])
     .then((answers) => {
@@ -412,12 +424,12 @@ async function changeEmployeeDirectManager() {
         `UPDATE employee SET manager_id = ? WHERE id = ?;`,
         "updated",
         " manager",
-        answers.employee_id,
+        answers.manager_id,
         answers.employee_id
       );
     });
 }
-
+// this function will use inquirer to prompt the user to select an employee, input a valid name, then updates their row using that info
 async function changeEmployeeName() {
   inquirer
     .prompt([

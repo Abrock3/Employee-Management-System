@@ -1,3 +1,5 @@
+/* This file will fill the tables in employee_info with rows of data to create a fake company */
+
 INSERT INTO
     department (name)
 VALUES
