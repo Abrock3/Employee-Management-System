@@ -30,7 +30,7 @@ Screenshot of the app during function:
 
 ## Credits
 The following npm packages were used to create this project:
-Inquirer: https://www.npmjs.com/package/inquirer?ref=hackernoon.com
+Inquirer: https://www.npmjs.com/package/inquirer?.com
 MySQL2: https://www.npmjs.com/package/mysql2
 console.table: https://www.npmjs.com/package/console.table
 
