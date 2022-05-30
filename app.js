@@ -113,7 +113,11 @@ function dbAction(
   // We use placeholders to heighten database security; this can prevent SQL injections
   conn.query(queryString, [firstPlaceholder, p2, p3, p4], (err, result) => {
     if (err) {
-      console.log(err);
+      if (err.code === "ER_DUP_ENTRY") {
+        console.log("\nThe entry you tried to input already exists!\n");
+      } else {
+        console.log(err);
+      }
     } else {
       console.log(
         `\n\n You successfully ${actionDescription} a${insertedType}! \n`
