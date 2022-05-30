@@ -1,7 +1,9 @@
 # Employee Management System
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Description
+
 This is a command line interface CMS that allows an unskilled user to create and manipulate employee data in a database.
 
 ## Table of Contents
@@ -29,6 +31,7 @@ Screenshot of the app during function:
 ![Screenshot](Assets/Images/Screenshot1.jpg?raw=true "Screenshot")
 
 ## Credits
+
 The following npm packages were used to create this project:
 Inquirer: https://www.npmjs.com/package/inquirer?.com
 MySQL2: https://www.npmjs.com/package/mysql2
