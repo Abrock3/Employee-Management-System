@@ -133,7 +133,7 @@ async function createRoleList() {
   // There are other ways to create a promise-wrapped db query (see dbSelectQuery), but this works similarly
   const promise = new Promise((resolve, reject) => {
     conn.query(
-      `SELECT role.title AS "name", role.id AS "value" FROM employee_info.role ORDER BY role.id;`,
+      `SELECT role.title AS "name", role.id AS "value" FROM employee_info.role ORDER BY role.title;`,
       (err, result) => {
         if (err) {
           console.log(err);
@@ -150,7 +150,7 @@ async function createRoleList() {
 async function createManagerList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
-      `SELECT concat(first_name, " ", last_name) AS "name", id AS "value" FROM employee_info.employee;`,
+      `SELECT concat(first_name, " ", last_name) AS "name", id AS "value" FROM employee_info.employee ORDER BY first_name;`,
       (err, result) => {
         if (err) {
           console.log(err);
@@ -169,7 +169,7 @@ async function createManagerList() {
 async function createDepartmentList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
-      `SELECT name AS "name", id AS "value" FROM department;`,
+      `SELECT name AS "name", id AS "value" FROM department ORDER BY name;`,
       (err, result) => {
         if (err) {
           console.log(err);
@@ -186,7 +186,7 @@ async function createDepartmentList() {
 async function createEmployeeList() {
   const promise = new Promise((resolve, reject) => {
     conn.query(
-      `SELECT CONCAT(last_name,", ", first_name) AS "name", id AS "value" FROM employee;`,
+      `SELECT CONCAT(last_name,", ", first_name) AS "name", id AS "value" FROM employee ORDER BY last_name;`,
       (err, result) => {
         if (err) {
           console.log(err);
